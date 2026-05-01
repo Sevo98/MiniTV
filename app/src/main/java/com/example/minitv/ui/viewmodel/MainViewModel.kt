@@ -42,10 +42,24 @@ class MainViewModel(
     }
 
     fun onVideoCompleted() {
+        playNextVideo()
+    }
+
+    fun playNextVideo() {
         currentIndex++
 
         if (currentIndex >= _videoList.size) {
             currentIndex = 0
+        }
+
+        startVideo(currentIndex)
+    }
+
+    fun playPreviousVideo() {
+        currentIndex--
+
+        if (currentIndex < 0) {
+            currentIndex = _videoList.size - 1
         }
 
         startVideo(currentIndex)

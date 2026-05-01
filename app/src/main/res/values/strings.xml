@@ -2,5 +2,9 @@
     <string name="app_name">MiniTV</string>
     <string name="open_video">Открыть видео</string>
     <string name="open_logs">Показать логи БД</string>
-    <string name="logs_empty">Логи пока отсутствуют</string>
+    <string name="logs_empty">Логи отсутствуют</string>
+    <string name="player_previous">⏮️</string>
+    <string name="player_pause">⏸️</string>
+    <string name="player_play">▶️</string>
+    <string name="player_next">⏭️</string>
 </resources>

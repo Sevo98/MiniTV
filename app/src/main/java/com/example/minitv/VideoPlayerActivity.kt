@@ -2,9 +2,13 @@ package com.example.minitv
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -20,10 +24,18 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private lateinit var viewModel: MainViewModel
     private lateinit var surfaceView: SurfaceView
+    private lateinit var playerControls: View
+    private lateinit var playPauseButton: Button
     private var mediaPlayer: MediaPlayer? = null
     private var audioPlayer: MediaPlayer? = null
     private var isSurfaceReady = false
     private var currentVideoIdentifier: String? = null
+    private var isPlaybackPaused = false
+    private var areControlsVisible = true
+    private val controlsHandler = Handler(Looper.getMainLooper())
+    private val hideControlsRunnable = Runnable {
+        hideControls()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +44,31 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         hideSystemUi()
 
         surfaceView = findViewById(R.id.surfaceView)
+        playerControls = findViewById(R.id.playerControls)
         surfaceView.holder.addCallback(this)
+        playPauseButton = findViewById(R.id.playPauseButton)
+        val previousButton: Button = findViewById(R.id.previousButton)
+        val nextButton: Button = findViewById(R.id.nextButton)
+        val rootView: View = findViewById(android.R.id.content)
+
+        rootView.setOnClickListener {
+            toggleControlsVisibility()
+        }
+
+        playPauseButton.setOnClickListener {
+            togglePlayback()
+            scheduleControlsAutoHide()
+        }
+
+        previousButton.setOnClickListener {
+            viewModel.playPreviousVideo()
+            scheduleControlsAutoHide()
+        }
+
+        nextButton.setOnClickListener {
+            viewModel.playNextVideo()
+            scheduleControlsAutoHide()
+        }
 
         viewModel = ViewModelProvider(this, MainViewModelFactory(application))[MainViewModel::class.java]
 
@@ -72,8 +108,11 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
             mediaPlayer?.setDisplay(surfaceView.holder)
 
             mediaPlayer?.setOnPreparedListener { mp ->
+                isPlaybackPaused = false
+                updatePlayPauseButton()
                 mp.start()
                 playAudioForVideo(fileName)
+                showControls()
                 Log.d("MediaPlayer", "Playback started: $fileName")
             }
 
@@ -93,6 +132,54 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         } catch (e: Exception) {
             Log.e("VideoPlayerActivity", "Failed to play video: ${e.message}")
         }
+    }
+
+    private fun togglePlayback() {
+        val player = mediaPlayer ?: return
+
+        if (isPlaybackPaused) {
+            player.start()
+            audioPlayer?.start()
+            isPlaybackPaused = false
+        } else {
+            player.pause()
+            if (audioPlayer?.isPlaying == true) {
+                audioPlayer?.pause()
+            }
+            isPlaybackPaused = true
+        }
+
+        updatePlayPauseButton()
+    }
+
+    private fun updatePlayPauseButton() {
+        val buttonTextRes = if (isPlaybackPaused) R.string.player_play else R.string.player_pause
+        playPauseButton.text = getString(buttonTextRes)
+    }
+
+    private fun toggleControlsVisibility() {
+        if (areControlsVisible) {
+            hideControls()
+        } else {
+            showControls()
+        }
+    }
+
+    private fun showControls() {
+        playerControls.visibility = View.VISIBLE
+        areControlsVisible = true
+        scheduleControlsAutoHide()
+    }
+
+    private fun hideControls() {
+        playerControls.visibility = View.GONE
+        areControlsVisible = false
+        controlsHandler.removeCallbacks(hideControlsRunnable)
+    }
+
+    private fun scheduleControlsAutoHide() {
+        controlsHandler.removeCallbacks(hideControlsRunnable)
+        controlsHandler.postDelayed(hideControlsRunnable, 3000L)
     }
 
     private fun playAudioForVideo(videoFileName: String) {
@@ -169,6 +256,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun onDestroy() {
         super.onDestroy()
+        controlsHandler.removeCallbacks(hideControlsRunnable)
         mediaPlayer?.release()
         mediaPlayer = null
         releaseAudioPlayer()
