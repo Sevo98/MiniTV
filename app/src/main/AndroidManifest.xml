@@ -8,13 +8,23 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.MiniTV">
         <activity
+            android:name=".LogsActivity"
+            android:exported="false"
+            android:label="@string/open_logs"
+            android:theme="@style/Theme.MiniTV" />
+        <activity
+            android:name=".VideoPlayerActivity"
+            android:exported="false"
+            android:label="@string/open_video"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.MiniTV" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="landscape"
             android:label="@string/app_name"
             android:theme="@style/Theme.MiniTV">
             <intent-filter>
