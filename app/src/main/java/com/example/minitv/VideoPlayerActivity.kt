@@ -6,6 +6,9 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.minitv.ui.viewmodel.MainViewModel
@@ -24,7 +27,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_video_player)
+        hideSystemUi()
 
         surfaceView = findViewById(R.id.surfaceView)
         surfaceView.holder.addCallback(this)
@@ -41,6 +46,13 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 }
             }
         }
+    }
+
+    private fun hideSystemUi() {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun playVideo(fileName: String) {
@@ -160,5 +172,17 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         mediaPlayer?.release()
         mediaPlayer = null
         releaseAudioPlayer()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemUi()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemUi()
+        }
     }
 }
